@@ -2,18 +2,37 @@ const http = require('http')
 const querystring = require('querystring')
 const uuidv1 = require('uuid/v1')
 let allRequest = {}
-const concurrency = 5000
-setInterval(() => {
+const concurrency = 100
+function result() {
   let totalTime = 0;
   for (let reqId in allRequest) {
     totalTime = totalTime + allRequest[reqId].usedTime
   }
   console.log("QPS")
   console.log(totalTime / concurrency)
-}, 1000)
-for (let i = 0; i < concurrency; i++) {
-  send()
 }
+setInterval(() => {
+  result();
+}, 1000)
+
+const iStartTime = new Date().getTime();
+
+async function excutCurrency() {
+  for (let i = 0; i < concurrency; i++) {
+    send()
+  }
+  let now = new Date().getTime();
+  //1min
+  if (now - iStartTime > 2 * 1000) {
+    return
+  }
+  setTimeout(() => {
+    excutCurrency();
+  }, 1)
+}
+
+excutCurrency();
+
 function send() {
   let reqId = uuidv1();
   allRequest[reqId] = {
@@ -47,7 +66,7 @@ function send() {
     });
   });
   req.on('error', (e) => {
-    console.error(`problem with request: ${e.message}`);
+    // console.log(e)
   });
   req.write(postData);
   req.end();
