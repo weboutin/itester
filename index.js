@@ -2,6 +2,7 @@ const http = require('http')
 const querystring = require('querystring')
 const uuidv1 = require('uuid/v1')
 let allRequest = {}
+let reqCount = 0;
 const concurrency = 100
 function result() {
   let totalTime = 0;
@@ -9,7 +10,7 @@ function result() {
     totalTime = totalTime + allRequest[reqId].usedTime
   }
   console.log("QPS")
-  console.log(totalTime / concurrency)
+  console.log(totalTime / reqCount)
 }
 setInterval(() => {
   result();
@@ -19,6 +20,7 @@ const iStartTime = new Date().getTime();
 
 async function excutCurrency() {
   for (let i = 0; i < concurrency; i++) {
+    reqCount = reqCount++
     send()
   }
   let now = new Date().getTime();
