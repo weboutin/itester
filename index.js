@@ -10,6 +10,7 @@ function result() {
     totalTime = totalTime + allRequest[reqId].usedTime
   }
   console.log("QPS")
+  console.log(reqCount)
   console.log(totalTime / reqCount)
 }
 setInterval(() => {
@@ -20,7 +21,7 @@ const iStartTime = new Date().getTime();
 
 async function excutCurrency() {
   for (let i = 0; i < concurrency; i++) {
-    reqCount = reqCount++
+    reqCount = reqCount + 1
     send()
   }
   let now = new Date().getTime();
