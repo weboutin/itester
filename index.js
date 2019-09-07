@@ -23,7 +23,7 @@ async function excutCurrency() {
   }
   let now = new Date().getTime();
   //1min
-  if (now - iStartTime > 2 * 1000) {
+  if (now - iStartTime > 1 * 60 * 1000) {
     return
   }
   setTimeout(() => {
