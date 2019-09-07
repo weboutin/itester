@@ -7,7 +7,9 @@ const concurrency = 100
 function result() {
   let totalTime = 0;
   for (let reqId in allRequest) {
-    totalTime = totalTime + allRequest[reqId].usedTime
+    if (allRequest[reqId].status == "finish") {
+      totalTime = totalTime + allRequest[reqId].usedTime
+    }
   }
   console.log("QPS")
   console.log(reqCount)
@@ -21,7 +23,6 @@ const iStartTime = new Date().getTime();
 
 async function excutCurrency() {
   for (let i = 0; i < concurrency; i++) {
-    reqCount = reqCount + 1
     send()
   }
   let now = new Date().getTime();
@@ -62,6 +63,7 @@ function send() {
     res.on('data', (chunk) => {
     });
     res.on('end', () => {
+      reqCount = reqCount + 1
       let endTime = new Date().getTime()
       allRequest[reqId].endTime = endTime
       allRequest[reqId].status = 'finish'
