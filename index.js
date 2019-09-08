@@ -1,78 +1,68 @@
-const http = require('http')
-const querystring = require('querystring')
-const uuidv1 = require('uuid/v1')
-let allRequest = {}
-let reqCount = 0;
-const concurrency = 100
-function result() {
-  let totalTime = 0;
-  for (let reqId in allRequest) {
-    if (allRequest[reqId].status == "finish") {
-      totalTime = totalTime + allRequest[reqId].usedTime
+const uuidv1 = require('uuid/v1');
+const reporter = require('./reporter');
+
+//记录所有的请求状态
+let REQUEST_CONTAINER = {}
+//发出的请求总数
+let REQUEST_COUNT = 0;
+//请求成功的数量
+let SUCCESS_REQUEST_COUNT = 0;
+//请求失败的数量
+let FAIL_REQUEST_COUNT = 0;
+//并发数
+const CONCURRENCY = 30
+//启动时间
+const SYS_START_TIME = new Date().getTime();
+
+let SYS_END_TIME = null;
+//请求持续时间 10 s
+const REQUEST_DURATOIN = 6 * 1000;
+
+const HttpHelper = require('./httpHelper');
+
+function main() {
+  const now = new Date().getTime();
+  if (now - SYS_START_TIME >= REQUEST_DURATOIN) {
+    console.log('end')
+    SYS_END_TIME = now;
+    reporter.result({
+      sysStartTime: SYS_START_TIME,
+      sysEndTime: SYS_END_TIME,
+      requestContainer: REQUEST_CONTAINER,
+      requestCount: REQUEST_COUNT,
+      successRequestCount: SUCCESS_REQUEST_COUNT,
+      failRequestCount: FAIL_REQUEST_COUNT
+    })
+    return;
+  }
+  for (let i = 0; i < CONCURRENCY; i++) {
+    const reqId = uuidv1();
+    REQUEST_CONTAINER[reqId] = {
+      reqId: reqId,
+      startAt: new Date().getTime(),
+      endAt: null,
+      status: 'wait',
     }
-  }
-  console.log("QPS")
-  console.log(reqCount)
-  console.log(totalTime / reqCount)
-}
-setInterval(() => {
-  result();
-}, 1000)
-
-const iStartTime = new Date().getTime();
-
-async function excutCurrency() {
-  for (let i = 0; i < concurrency; i++) {
-    send()
-  }
-  let now = new Date().getTime();
-  //1min
-  if (now - iStartTime > 1 * 60 * 1000) {
-    return
+    REQUEST_COUNT++;
+    let sender = new HttpHelper({
+      reqId: reqId,
+      onSuccess: () => {
+        SUCCESS_REQUEST_COUNT++;
+        REQUEST_CONTAINER[reqId].endAt = new Date().getTime()
+        REQUEST_CONTAINER[reqId].status = 'success'
+      },
+      onFail: () => {
+        FAIL_REQUEST_COUNT++;
+        REQUEST_CONTAINER[reqId].endAt = new Date().getTime()
+        REQUEST_CONTAINER[reqId].status = 'fail'
+      },
+    })
+    sender.send();
   }
   setTimeout(() => {
-    excutCurrency();
+    main()
   }, 1)
 }
 
-excutCurrency();
+main();
 
-function send() {
-  let reqId = uuidv1();
-  allRequest[reqId] = {
-    status: 'wait',
-    startTime: new Date().getTime(),
-    endTime: null,
-    usedTime: null
-  }
-  const postData = querystring.stringify({
-    'msg': 'Hello World!'
-  });
-  const options = {
-    hostname: '127.0.0.1',
-    port: 4003,
-    path: '/upload',
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/x-www-form-urlencoded',
-      'Content-Length': Buffer.byteLength(postData)
-    }
-  };
-  const req = http.request(options, (res) => {
-    res.setEncoding('utf8');
-    res.on('data', (chunk) => {
-    });
-    res.on('end', () => {
-      reqCount = reqCount + 1
-      let endTime = new Date().getTime()
-      allRequest[reqId].endTime = endTime
-      allRequest[reqId].status = 'finish'
-      allRequest[reqId].usedTime = endTime - allRequest[reqId].startTime
-    });
-  });
-  req.on('error', (e) => {
-    // console.log(e)
-  });
-  req.write(postData);
-  req.end();
-}
