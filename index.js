@@ -16,25 +16,11 @@ const SYS_START_TIME = new Date().getTime();
 
 let SYS_END_TIME = null;
 //请求持续时间 10 s
-const REQUEST_DURATOIN = 6 * 1000;
+const REQUEST_DURATOIN = 5 * 1000;
 
 const HttpHelper = require('./httpHelper');
 
 function main() {
-  const now = new Date().getTime();
-  if (now - SYS_START_TIME >= REQUEST_DURATOIN) {
-    console.log('end')
-    SYS_END_TIME = now;
-    reporter.result({
-      sysStartTime: SYS_START_TIME,
-      sysEndTime: SYS_END_TIME,
-      requestContainer: REQUEST_CONTAINER,
-      requestCount: REQUEST_COUNT,
-      successRequestCount: SUCCESS_REQUEST_COUNT,
-      failRequestCount: FAIL_REQUEST_COUNT
-    })
-    return;
-  }
   for (let i = 0; i < CONCURRENCY; i++) {
     const reqId = uuidv1();
     REQUEST_CONTAINER[reqId] = {
@@ -59,9 +45,6 @@ function main() {
     })
     sender.send();
   }
-  setTimeout(() => {
-    main()
-  }, 1)
 }
 
 main();
