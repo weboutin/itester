@@ -1,5 +1,4 @@
 const uuidv1 = require('uuid/v1');
-const reporter = require('./reporter');
 
 //记录所有的请求状态
 let REQUEST_CONTAINER = {}
@@ -11,14 +10,14 @@ let SUCCESS_REQUEST_COUNT = 0;
 let FAIL_REQUEST_COUNT = 0;
 //并发数
 const CONCURRENCY = 30
-//启动时间
+//系统启动时间
 const SYS_START_TIME = new Date().getTime();
-
+//系统结束时间
 let SYS_END_TIME = null;
 //请求持续时间 10 s
 const REQUEST_DURATOIN = 5 * 1000;
 
-const HttpHelper = require('./httpHelper');
+const HttpHelper = require('./httpSender');
 
 function main() {
   for (let i = 0; i < CONCURRENCY; i++) {

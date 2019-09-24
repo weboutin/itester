@@ -23,10 +23,11 @@ class HttpSender {
         this.onFail();
         return;
       }
-      // res.on('data', () => { })
-      // res.on('end', () => {
-      //   this.onSuccess()
-      // })
+      res.on('data', () => { })
+      res.on('end', () => {
+        this.onSuccess()
+        this.send()
+      })
     }).on('error', (e) => {
       this.onFail();
     })
